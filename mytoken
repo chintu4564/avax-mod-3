@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract CustomToken is ERC20 {
+    address public TokenOwner;
+
+    event MintedTokens(address indexed beneficiary, uint256 transferredVolume);
+    event BurnedTokens(address indexed burner, uint256 burnedVolume);
+    event TransferredTokens(address indexed sender, address indexed beneficiary, uint256 transferredVolume);
+
+    modifier onlyTokenOwner() {
+        require(msg.sender == TokenOwner, "Only the token owner can perform this operation");
+        _;
+    }
+
+    constructor(string memory _tokenName, string memory _tokenSymbol) ERC20(_tokenName, _tokenSymbol) {
+        TokenOwner = msg.sender;
+        _mint(msg.sender, 0); // Setting the initial supply to 1000 tokens
+    }
+
+    function mintTokens(address _beneficiary, uint256 _transferredVolume) public onlyTokenOwner {
+        require(_beneficiary != address(0), "Invalid beneficiary address");
+        require(_transferredVolume > 0, "Transferred volume must be greater than 0");
+
+        _mint(_beneficiary, _transferredVolume);
+
+        emit MintedTokens(_beneficiary, _transferredVolume);
+    }
+
+    function burnTokens(uint256 _burnedVolume) public {
+        require(_burnedVolume > 0, "Burned volume must be greater than 0");
+
+        _burn(msg.sender, _burnedVolume);
+
+        emit BurnedTokens(msg.sender, _burnedVolume);
+    }
+
+    function transferTokens(address _beneficiary, uint256 _transferredVolume) public {
+        require(_beneficiary != address(0), "Invalid beneficiary address");
+        require(_transferredVolume > 0, "Transferred volume must be greater than 0");
+
+        _transfer(msg.sender, _beneficiary, _transferredVolume);
+
+        emit TransferredTokens(msg.sender, _beneficiary, _transferredVolume);
+    }
+}
